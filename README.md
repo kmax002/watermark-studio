@@ -38,7 +38,7 @@ launch their own Pod and set their own password. This is not a multi-tenant serv
 Choose **Configure Pod**, select a GPU and set your own `APP_PASSWORD` through
 **Set overrides** before deploying. Each creator runs a separate private workspace.
 The password unlocks the workspace and its files; recipients of downloaded MP4s
-do not need it. Use a unique passphrase of at least 16 characters.
+do not need it. Each Pod accepts a password of at least 8 characters.
 
 Budget enough disk for the original plus all outputs and about 10 GB for software.
 RunPod's deployment screen may require you to add the template's recommended
@@ -100,7 +100,7 @@ For faster startup, the optional prebuilt container route is:
    a 30 GB container disk, and suitable `/workspace` volume capacity. The file
    `runpod-template.json` is the prebuilt-container configuration reference; its
    image is a placeholder. This is separate from the generated source template.
-4. Set a **unique APP_PASSWORD of at least 16 characters at each deployment**.
+4. Set your own **APP_PASSWORD of at least 8 characters at each deployment**.
    Never bake it into an image or public template. With no password, startup fails.
 5. Validate the GPU deployment using the neutral smoke test before sharing the
    template link. Only then publish/share the template through Runpod.

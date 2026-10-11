@@ -13,7 +13,7 @@ if not re.fullmatch('[0-9a-f]{40}', revision):
 # to this commit, so an upgrade cannot mix sources with an older installation.
 directory = '/workspace/watermark-studio-' + revision[:12]
 command = (
-    'set -e; test "${#APP_PASSWORD}" -ge 16 || { echo "Set APP_PASSWORD to at least 16 characters before deploying."; exit 1; }; '
+    'set -e; test "${#APP_PASSWORD}" -ge 8 || { echo "Set APP_PASSWORD to at least 8 characters before deploying."; exit 1; }; '
     f'if [ ! -d {directory}/.git ]; then git clone {repo}.git {directory}; fi; '
     f'cd {directory}; git checkout --detach {revision}; '
     f'test "$(git rev-parse HEAD)" = {revision}; git diff --quiet; git diff --cached --quiet; exec bash start-runpod.sh'
@@ -23,7 +23,7 @@ spec = dict(name='Watermark Studio', category='NVIDIA', imageName='runpod/pytorc
     volumeInGb=100, volumeMountPath='/workspace', ports=['7860/http'], isServerless=False, isPublic=True,
     env={'APP_PASSWORD':'','COOKIE_SECURE':'1','WATERMARK_DEVICE':'cuda',
          'WATERMARK_DATA':'/workspace/watermark-studio-data'},
-    readme='Invisible per-copy video watermarking. Set a unique APP_PASSWORD (16+ characters) before deployment. '
+    readme='Invisible per-copy video watermarking. Set your own APP_PASSWORD (8+ characters) before deployment. '
            'Open HTTP port 7860 after first-time setup. Download videos and back up the private recovery JSON, then terminate the Pod. '
            'Later, use a fresh Pod with only the suspected leak and saved recovery JSON to recover the copy number. '
            'Experimental: identifies an issued copy, not a person. Source: ' + repo)
