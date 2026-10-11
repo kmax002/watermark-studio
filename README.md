@@ -14,6 +14,14 @@ private recovery keys, credentials or Windows Python installation**.
 5. To check a suspected leak, upload the leaked video and the original recovery
    JSON. Start with a 30-second window. A recovered ID identifies a copy, not a person.
 
+**You do not need to keep videos on RunPod.** Once you have downloaded your
+videos and backed up the small private recovery JSON, you can terminate the Pod.
+Months later, launch a fresh Pod and upload only the suspected stolen video and
+that recovery file. The checker reports the original batch's copy label/number;
+it needs neither the original movie nor the old Pod's storage. Keep the optional
+recipient CSV locally if you want to look up who received that number. The public
+template contains no recovery keys; losing your recovery file prevents recovery.
+
 Uploads use 8 MiB chunks. If interrupted, choose the same file in the same tab to
 resume. Completed uploads and job status survive a page refresh. Processing
 continues with the browser closed while the Pod remains running. After a server
@@ -24,10 +32,21 @@ One password protects one owner's workspace. Everyone with that password can see
 all its videos, private keys and jobs. Share the **template**, and have each creator
 launch their own Pod and set their own password. This is not a multi-tenant service.
 
-## Runpod setup from the source ZIP
+## Public RunPod template
 
-The package is ready for installation. A Runpod template still needs to be saved
-and validated in the owner's account before there is a one-click deployment link.
+[Open Watermark Studio on RunPod](https://console.runpod.io/hub/template/kxe3r4aicz).
+Choose **Configure Pod**, select a GPU and set your own `APP_PASSWORD` through
+**Set overrides** before deploying. Each creator runs a separate private workspace.
+The password unlocks the workspace and its files; recipients of downloaded MP4s
+do not need it. Use a unique passphrase of at least 16 characters.
+
+Budget enough disk for the original plus all outputs and about 10 GB for software.
+RunPod's deployment screen may require you to add the template's recommended
+volume explicitly. If you use only container storage, download everything before
+stopping as well as terminating the Pod. Storage on RunPod is never your backup.
+See `VALIDATION.md` for the current deployment test status.
+
+## Runpod setup from the source ZIP
 
 1. Start an official Runpod PyTorch 2.8 / CUDA 12.8 GPU Pod. Expose HTTP port **7860**.
    A GPU with at least 16 GB VRAM is a conservative starting point, not a measured
@@ -59,7 +78,8 @@ python tools/template.py https://github.com/OWNER/watermark-studio FULL_COMMIT_S
 
 Save that template in your Runpod account, test it on a GPU, then share its Runpod
 template link. Template creation does not launch a GPU; deploying a Pod does.
-The generated template defaults to private until its live test is complete.
+The generated template is public and contains an empty password field. Each user
+must choose a private password at deployment; never put one in the template.
 
 For faster startup, the optional prebuilt container route is:
 

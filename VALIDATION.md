@@ -20,6 +20,12 @@
   processing was refused, and cancellation settled without releasing a video.
   This complete HTTP test passed on both Windows and Ubuntu Linux.
 - JavaScript syntax, Python compilation and Linux shell syntax were checked.
+- The actual browser login, tab controls, private recovery download and recovery
+  upload were exercised. A separate, initially empty workspace received only the
+  recompressed synthetic leak and its original recovery JSON through browser file
+  uploads. Its real CPU worker recovered **Neutral 001**, with matching aggregate
+  and two-half results. No original video or previous workspace data was supplied.
+  Desktop browser layout was inspected visually.
 
 The worker's original stdin-based parent monitor blocked model imports on Windows.
 It was replaced with process identity monitoring (PID plus process creation time).
@@ -30,10 +36,8 @@ The successful HTTP test above ran after that fix.
 - No GPU Pod was rented or charged, and no Runpod API request was submitted.
 - Docker Desktop's Linux engine was unavailable. The Dockerfile has not been
   built here; do not describe the image as built or deployed.
-- Browser automation could not open an in-app tab, and Chrome was unavailable
-  to the active browser tool. The HTML is served successfully, but visual,
-  responsive, drag/drop and browser download behavior still need a real browser
-  check. HTTP/API tests are not browser tests.
+- Responsive breakpoints, drag/drop and very large browser uploads have not been
+  checked. The successful browser test used small neutral files.
 - No claim of universal watermark robustness, guaranteed invisibility,
   arbitrary-film perceptual quality or statistically calibrated false attribution.
 - No user movie, private recovery register or recipient record was used in these

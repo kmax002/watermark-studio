@@ -27,7 +27,7 @@
 <div id="check-options" hidden>
 <div class="section-title"><span class="step">02</span><h2>Add the private recovery file</h2></div>
 <label for="recovery-file">Recovery JSON</label><input id="recovery-file" type="file" accept=".json,application/json"><select id="recovery-select" aria-label="Uploaded recovery file"><option value="">Choose or upload a recovery file</option></select>
-<p class="hint">Use the file saved with the original batch. No original movie or expected copy number is needed.</p>
+<p class="hint">Use the private recovery file you downloaded with the original batch. This works on a fresh Pod: no original movie, old Pod or expected copy number is needed.</p>
 <div class="form-row"><div><label for="start">Start at (seconds)</label><input id="start" type="number" min="0" max="14400" step="0.1" value="0"></div><div><label for="seconds">Check length (seconds)</label><input id="seconds" type="number" min="4" max="60" step="0.1" value="30"></div></div>
 <p class="hint">Start with 30 seconds of visible footage. Try another window if the result is inconclusive.</p>
 </div>
@@ -35,6 +35,6 @@
 </form></section>
 <aside class="delivery" aria-labelledby="delivery-heading"><div class="section-title"><h2 id="delivery-heading">Your batches & checks</h2><span id="job-count" class="count">0</span></div><div id="jobs"></div><div id="empty"><div class="empty-rule"></div><h3>Your downloads will appear here.</h3><p>Each copy gets a fresh invisible ID. Only copies that pass recovery checks are released.</p><ol><li>Download and back up the private recovery file.</li><li>Send each viewer their assigned MP4.</li><li>Keep the recipient log for your own records.</li></ol></div></aside>
 </div>
-<footer><p><strong>Trace a copy, not a person.</strong> A recovered ID identifies an issued copy. Cropping, heavy compression or deliberate removal can defeat the mark. Inconclusive means no reliable match was recovered.</p><details><summary>Storage & privacy</summary><p>Your uploads, outputs and recovery keys are stored on this Pod. Keep recovery files private, and download them before deleting a batch or terminating the Pod. A shared template contains the app, never another creator’s keys.</p><div id="uploads-list"></div></details></footer>
+<footer><p><strong>Trace a copy, not a person.</strong> A recovered ID identifies an issued copy. Cropping, heavy compression or deliberate removal can defeat the mark. Inconclusive means no reliable match was recovered.</p><details><summary>Storage & privacy</summary><p>Download your videos and private recovery file, then you can terminate this Pod. To check a leak later, start a fresh Pod and upload only the suspected video and that recovery file. You do not need to keep videos on RunPod. Back up the recovery file somewhere private: it cannot be replaced if lost. A shared template contains the app, never another creator’s keys.</p><div id="uploads-list"></div></details></footer>
 </div>
 </main></body></html>

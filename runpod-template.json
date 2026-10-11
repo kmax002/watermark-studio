@@ -11,5 +11,5 @@
     "WATERMARK_DATA": "/workspace/watermark-studio-data",
     "WATERMARK_DEVICE": "cuda"
   },
-  "isPublic": false
+  "isPublic": true
 }

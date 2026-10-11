@@ -20,12 +20,13 @@ command = (
 )
 spec = dict(name='Watermark Studio', category='NVIDIA', imageName='runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404',
     dockerEntrypoint=[], dockerStartCmd=['bash','-lc',command], containerDiskInGb=30,
-    volumeInGb=100, volumeMountPath='/workspace', ports=['7860/http'], isServerless=False, isPublic=False,
+    volumeInGb=100, volumeMountPath='/workspace', ports=['7860/http'], isServerless=False, isPublic=True,
     env={'APP_PASSWORD':'','COOKIE_SECURE':'1','WATERMARK_DEVICE':'cuda',
          'WATERMARK_DATA':'/workspace/watermark-studio-data'},
     readme='Invisible per-copy video watermarking. Set a unique APP_PASSWORD (16+ characters) before deployment. '
-           'Open HTTP port 7860 after first-time setup. Back up private recovery files before terminating the Pod. '
+           'Open HTTP port 7860 after first-time setup. Download videos and back up the private recovery JSON, then terminate the Pod. '
+           'Later, use a fresh Pod with only the suspected leak and saved recovery JSON to recover the copy number. '
            'Experimental: identifies an issued copy, not a person. Source: ' + repo)
 with Path(output).open('x',encoding='utf8') as f:
     json.dump(spec,f,indent=2)
-print('Prepared a private template. No Pod was started and no account was changed.')
+print('Prepared a public template with no password. No Pod was started and no account was changed.')
