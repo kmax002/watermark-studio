@@ -16,7 +16,7 @@ command = (
     'set -e; test "${#APP_PASSWORD}" -ge 16 || { echo "Set APP_PASSWORD to at least 16 characters before deploying."; exit 1; }; '
     f'if [ ! -d {directory}/.git ]; then git clone {repo}.git {directory}; fi; '
     f'cd {directory}; git checkout --detach {revision}; '
-    f'test "$(git rev-parse HEAD)" = {revision}; exec bash start-runpod.sh'
+    f'test "$(git rev-parse HEAD)" = {revision}; git diff --quiet; git diff --cached --quiet; exec bash start-runpod.sh'
 )
 spec = dict(name='Watermark Studio', category='NVIDIA', imageName='runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404',
     dockerEntrypoint=[], dockerStartCmd=['bash','-lc',command], containerDiskInGb=30,

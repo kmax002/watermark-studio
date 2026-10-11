@@ -18,6 +18,7 @@
   private recovery download and checked MP4 download. Its downloaded hash matched
   the saved verification record, public state excluded the secret, simultaneous
   processing was refused, and cancellation settled without releasing a video.
+  This complete HTTP test passed on both Windows and Ubuntu Linux.
 - JavaScript syntax, Python compilation and Linux shell syntax were checked.
 
 The worker's original stdin-based parent monitor blocked model imports on Windows.
