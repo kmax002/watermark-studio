@@ -1,0 +1,15 @@
+*
+!app/
+!app/*.py
+!static/
+!static/*.html
+!static/*.css
+!static/*.js
+!tools/
+!tools/*.py
+!tests/
+!tests/*.py
+!requirements.txt
+!README.md
+!THIRD_PARTY_NOTICES.md
+!LICENSE

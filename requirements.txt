@@ -1,0 +1,26 @@
+# PyTorch and torchvision come from the pinned CUDA base image.
+fastapi==0.136.1
+uvicorn==0.44.0
+numpy==2.2.6
+bchlib==2.1.3
+omegaconf==2.3.0
+timm==0.9.16
+einops==0.8.1
+lpips==0.1.4
+opencv-python-headless==4.11.0.86
+pandas==2.2.3
+pycocotools==2.0.8
+pytorch-msssim==1.0.0
+scipy==1.15.2
+scikit-image==0.25.2
+PyWavelets==1.8.0
+safetensors==0.5.3
+transformers==4.51.3
+calflops==0.3.2
+ffmpeg-python==0.2.0
+av==18.1.0
+decord==0.6.0
+tensorboard==2.19.0
+httpx==0.28.1
+pytest==8.3.5
+psutil==7.2.2

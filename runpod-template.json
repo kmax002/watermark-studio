@@ -1,0 +1,15 @@
+{
+  "name": "Watermark Studio",
+  "imageName": "REPLACE_WITH_YOUR_PUBLISHED_IMAGE:0.1.0",
+  "containerDiskInGb": 30,
+  "volumeInGb": 100,
+  "volumeMountPath": "/workspace",
+  "ports": ["7860/http"],
+  "env": {
+    "APP_PASSWORD": "",
+    "COOKIE_SECURE": "1",
+    "WATERMARK_DATA": "/workspace/watermark-studio-data",
+    "WATERMARK_DEVICE": "cuda"
+  },
+  "isPublic": false
+}

@@ -1,0 +1,167 @@
+# Watermark Studio
+
+A private browser app for individually watermarked video copies and later copy-ID
+recovery. Designed for an NVIDIA Runpod Pod, with a portable Python/FFmpeg engine.
+This source package contains **no films, recipient records, existing copy IDs,
+private recovery keys, credentials or Windows Python installation**.
+
+## Use the app
+
+1. Unlock with your Pod's workspace password.
+2. Upload a video, choose a batch name, copy count and maximum size in decimal GB.
+3. Download and back up the **PRIVATE recovery JSON** and optional recipient CSV.
+4. Download the verified MP4s. Give each viewer only their assigned MP4.
+5. To check a suspected leak, upload the leaked video and the original recovery
+   JSON. Start with a 30-second window. A recovered ID identifies a copy, not a person.
+
+Uploads use 8 MiB chunks. If interrupted, choose the same file in the same tab to
+resume. Completed uploads and job status survive a page refresh. Processing
+continues with the browser closed while the Pod remains running. After a server
+restart, unfinished jobs become interrupted and are **not automatically repeated**.
+Already verified downloads stay available. A new batch creates new IDs.
+
+One password protects one owner's workspace. Everyone with that password can see
+all its videos, private keys and jobs. Share the **template**, and have each creator
+launch their own Pod and set their own password. This is not a multi-tenant service.
+
+## Runpod setup from the source ZIP
+
+The package is ready for installation. A Runpod template still needs to be saved
+and validated in the owner's account before there is a one-click deployment link.
+
+1. Start an official Runpod PyTorch 2.8 / CUDA 12.8 GPU Pod. Expose HTTP port **7860**.
+   A GPU with at least 16 GB VRAM is a conservative starting point, not a measured
+   minimum. Budget storage for your source plus the copy count times your file-size
+   limit, plus about 10 GB for software/model. Twenty 1.5 GB copies need at least
+   30 GB for outputs alone. Use persistent storage mounted at `/workspace`.
+2. Upload and extract this source ZIP under `/workspace` using the Pod's file manager.
+3. In its terminal, run `bash start-runpod.sh` from the extracted folder. It asks for
+   a password if `APP_PASSWORD` is not already set, installs dependencies in its own
+   environment, and fetches the exact public model revision and verified weights.
+4. Open the Pod's **HTTP service on port 7860**. Sign in with your chosen password.
+
+Keep the process running in the Pod terminal. For routine sharing, use the
+container/template route below so the application starts automatically.
+Download outputs and private recovery data before terminating a Pod. Persistent
+Pod storage is not a backup; its lifecycle depends on the storage type chosen.
+
+## Publish a reusable template
+
+The simplest route uses the public source repository and Runpod's existing PyTorch
+image. No container registry account or GitHub Actions permissions are required.
+`tools/template.py` prepares a template JSON for an immutable source commit. On
+first start, the Pod installs the app and verified public model on its volume.
+Later starts reuse that installation. Set `APP_PASSWORD` separately in each Pod.
+
+```sh
+python tools/template.py https://github.com/OWNER/watermark-studio FULL_COMMIT_SHA runpod-source-template.json
+```
+
+Save that template in your Runpod account, test it on a GPU, then share its Runpod
+template link. Template creation does not launch a GPU; deploying a Pod does.
+The generated template defaults to private until its live test is complete.
+
+For faster startup, the optional prebuilt container route is:
+
+1. Put **only this directory** in a Git repository. The Docker build context uses a
+   strict allowlist; do not add `.data`, `.env`, model weights or private footage.
+2. Build on a Linux Docker host:
+
+   ```sh
+   docker build -t YOUR_REGISTRY/watermark-studio:0.1.0 .
+   docker push YOUR_REGISTRY/watermark-studio:0.1.0
+   ```
+
+   Alternatively, copy `examples/github-container.yml` to
+   `.github/workflows/container.yml`. That manually triggered workflow builds
+   and pushes `ghcr.io/OWNER/REPOSITORY:0.1.0`. Make that package available to the
+   intended users. The workflow does not create or rent a Pod.
+3. In Runpod, create a Pod template using that published image, **7860/http**,
+   a 30 GB container disk, and suitable `/workspace` volume capacity. The file
+   `runpod-template.json` is the prebuilt-container configuration reference; its
+   image is a placeholder. This is separate from the generated source template.
+4. Set a **unique APP_PASSWORD of at least 16 characters at each deployment**.
+   Never bake it into an image or public template. With no password, startup fails.
+5. Validate the GPU deployment using the neutral smoke test before sharing the
+   template link. Only then publish/share the template through Runpod.
+
+The full model is baked into the Docker image. Jobs do not download models, send
+videos to third-party inference APIs, or call Film Desk/Seedance. GPU and storage
+charges are billed by Runpod while the rented resources exist.
+
+## What the app changes
+
+- Accepts SDR videos lasting 4 seconds to 4 hours, even dimensions from 256 to 3840
+  pixels, and 1 to 120 fps. Inputs with HDR, rotation metadata or non-square pixels
+  are rejected with an explanation, rather than silently tone-mapped/reoriented.
+- Output retains aspect ratio, with the longest edge capped at 1920 pixels, H.264
+  video and the first audio track converted to AAC 192 kbps. Variable-frame-rate
+  input is normalised to its average frame rate. Extra audio/subtitle tracks and
+  metadata are omitted. Uploaded originals are preserved.
+- File-size control leaves encoding headroom. Every final file is measured; an
+  oversized or unreadable copy is withheld, not silently released or re-encoded.
+- Every output receives a full decode check, duration/dimension/audio-presence
+  checks, and authenticated watermark recovery at seven windows for videos over
+  24 seconds (one window for shorter videos). Aggregate and both temporal halves
+  must identify the same registered ID. These are sampled watermark checks.
+- Cancel stops processing; verified copies and the recovery file remain. Files can
+  be removed explicitly in the app after backing them up. No background auto-retry.
+
+## Recovery format and limits
+
+PixelSeal uses a 256-bit message containing a fresh 32-bit per-batch token,
+64-bit HMAC bound to the source SHA-256, and BCH error correction. Keys are
+generated with OS randomness; duplicate tokens within a batch are rejected.
+`app/payload.py` retains the existing experimental decoder and strict two-half rule.
+
+New recovery files use `watermark-studio-v1`. The checker also accepts compatible
+`film-issued-copies-v1` recovery files with the exact same model and payload settings.
+It never reissues or modifies their keys. No original movie or expected copy ID is
+needed to check a candidate. Keep the recovery file: a replacement random key or
+the public model cannot reconstruct it.
+
+Recovery does not prove who leaked a video, rule out payload transplantation or
+establish chain of custody. Crop, resize, low bitrate, collusion and deliberate
+removal can defeat the mark. An inconclusive result does not prove absence. The
+application does not promise leak prevention, universal invisibility or reliable
+arbitrarily short clips. The file-size limit does not guarantee perceptual quality.
+
+## Local development and checks
+
+Python 3.11/3.12, FFmpeg, PyTorch and torchvision are required. Install
+`requirements.txt` in an isolated environment, then point `VIDEOSEAL_REPO` at the
+pinned repository with its verified checkpoint. `tools/fetch_model.py` performs
+explicit setup downloads; model substitution fails verification.
+
+```sh
+python -m unittest discover -s tests -v
+# Explicit real-model test, synthetic content only; creates a NEW directory:
+WATERMARK_DEVICE=cpu python tools/smoke_test.py /tmp/watermark-smoke
+# GPU deployment check (same test, no additional inference-provider service):
+python tools/smoke_test.py /workspace/watermark-smoke
+```
+
+For local HTTP only, set `COOKIE_SECURE=0` and bind to **127.0.0.1**. Runpod uses
+HTTPS and must keep `COOKIE_SECURE=1`. Set `APP_PASSWORD`, then start:
+
+```sh
+python -m uvicorn app.server:factory --factory --host 127.0.0.1 --port 7860 --workers 1 --no-access-log
+```
+
+One server owns a data directory using an OS file lock. Do not run multiple workers.
+Authenticated routes serve only explicitly released files. Uploads stream to owned
+IDs, all jobs are local subprocesses, and supported media demuxers/network protocols
+are restricted. Public state contains no raw payloads, recovery secrets or server paths.
+
+See `VALIDATION.md` for what was actually tested. The source package is experimental.
+
+## License and upstream
+
+Application source: GPL-2.0-only, see `LICENSE`. Dependencies retain their own
+licenses; see `THIRD_PARTY_NOTICES.md`. Preserve notices and source obligations
+when distributing a combined container.
+
+- [Runpod custom templates](https://docs.runpod.io/pods/templates/create-custom-template)
+- [Runpod template management](https://docs.runpod.io/pods/templates/manage-templates)
+- [Meta VideoSeal / PixelSeal](https://github.com/facebookresearch/videoseal)
+

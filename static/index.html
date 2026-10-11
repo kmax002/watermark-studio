@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Watermark Studio</title><link rel="stylesheet" href="/static/style.css"><script src="/static/app.js" defer></script></head>
+<body>
+<header><a class="brand" href="/" aria-label="Watermark Studio home"><span class="mark" aria-hidden="true">W</span> Watermark Studio</a><div class="header-right"><span id="storage"></span><button id="logout" class="quiet" hidden>Lock workspace</button></div></header>
+<main>
+<section id="login-view" class="login">
+<p class="eyebrow">YOUR PRIVATE WORKSPACE</p><h1>Keep track of every copy.</h1><p class="intro">Create invisible, individually numbered video watermarks. Check a suspected leak against your private recovery file.</p>
+<form id="login-form"><label for="password">Workspace password</label><div class="login-controls"><input id="password" type="password" autocomplete="current-password" required><button class="primary">Unlock</button></div><p class="muted">Use the password you set when starting this Pod.</p><p id="login-error" class="error" role="alert"></p></form>
+</section>
+<div id="workspace" hidden>
+<div class="heading"><div><p class="eyebrow">INVISIBLE VIDEO WATERMARKS</p><h1>A different mark. Every copy.</h1><p class="intro">Make a batch, keep its recovery file, and know which copy a recovered mark belongs to.</p></div><span class="version">PixelSeal · Experimental</span></div>
+<nav class="tabs" aria-label="Workspace"><button id="create-tab" class="tab active" aria-current="page">Create copies</button><button id="check-tab" class="tab">Check a leak</button></nav>
+<div class="work-layout">
+<section class="setup" aria-labelledby="setup-heading">
+<form id="job-form">
+<div class="section-title"><span class="step">01</span><h2 id="setup-heading">Choose your video</h2></div>
+<div id="video-drop" class="drop-zone"><span class="upload-icon" aria-hidden="true">↥</span><strong>Drop a video here</strong><span class="muted">or choose a file from your computer</span><input id="video-file" type="file" accept="video/*,.mkv,.ts" aria-label="Choose video"><label class="button" for="video-file">Choose video</label><small>MP4, MOV, MKV, WebM, AVI or TS · up to 100 GB</small></div>
+<div id="upload-progress" hidden><div class="progress-label"><span id="upload-text"></span><button id="pause-upload" type="button" class="quiet">Pause</button></div><progress id="upload-bar" max="100" value="0"></progress></div>
+<label class="saved-label" for="video-select">Uploaded video</label><select id="video-select" required><option value="">Choose or upload a video</option></select>
+<div id="create-options">
+<div class="section-title"><span class="step">02</span><h2>Set up your copies</h2></div>
+<label for="batch-label">Batch name</label><input id="batch-label" value="Screening" maxlength="40" pattern="[A-Za-z0-9][A-Za-z0-9 _-]{0,39}" required><p class="hint">Files will be named Screening 001, Screening 002, and so on.</p>
+<div class="form-row"><div><label for="copies">Number of copies</label><input id="copies" type="number" min="1" max="100" step="1" value="5" required></div><div><label for="max-gb">Maximum size per copy</label><div class="unit-input"><input id="max-gb" type="number" min="0.01" max="100" step="0.01" value="1.5" required><span>GB</span></div></div></div>
+<p class="hint">Each MP4 is checked against this limit before download. A very small limit can make the watermark unreadable.</p>
+<details><summary>What happens to the video?</summary><p>SDR video keeps its proportions, up to 1920 pixels on its longest edge, and is encoded as H.264. Variable frame rates are made constant. The first audio track is converted to AAC. Your uploaded original is preserved.</p><p>HDR, rotation metadata and non-square pixels need a normalised SDR export first. Seven windows are checked in longer videos; short videos receive one window check. Recovery must agree across both halves of every window.</p></details>
+</div>
+<div id="check-options" hidden>
+<div class="section-title"><span class="step">02</span><h2>Add the private recovery file</h2></div>
+<label for="recovery-file">Recovery JSON</label><input id="recovery-file" type="file" accept=".json,application/json"><select id="recovery-select" aria-label="Uploaded recovery file"><option value="">Choose or upload a recovery file</option></select>
+<p class="hint">Use the file saved with the original batch. No original movie or expected copy number is needed.</p>
+<div class="form-row"><div><label for="start">Start at (seconds)</label><input id="start" type="number" min="0" max="14400" step="0.1" value="0"></div><div><label for="seconds">Check length (seconds)</label><input id="seconds" type="number" min="4" max="60" step="0.1" value="30"></div></div>
+<p class="hint">Start with 30 seconds of visible footage. Try another window if the result is inconclusive.</p>
+</div>
+<p id="form-error" class="error" role="alert"></p><button id="submit-job" class="primary wide">Create watermarked copies</button><p id="busy-note" class="hint">One job runs at a time. You can close this tab while the Pod keeps running.</p>
+</form></section>
+<aside class="delivery" aria-labelledby="delivery-heading"><div class="section-title"><h2 id="delivery-heading">Your batches & checks</h2><span id="job-count" class="count">0</span></div><div id="jobs"></div><div id="empty"><div class="empty-rule"></div><h3>Your downloads will appear here.</h3><p>Each copy gets a fresh invisible ID. Only copies that pass recovery checks are released.</p><ol><li>Download and back up the private recovery file.</li><li>Send each viewer their assigned MP4.</li><li>Keep the recipient log for your own records.</li></ol></div></aside>
+</div>
+<footer><p><strong>Trace a copy, not a person.</strong> A recovered ID identifies an issued copy. Cropping, heavy compression or deliberate removal can defeat the mark. Inconclusive means no reliable match was recovered.</p><details><summary>Storage & privacy</summary><p>Your uploads, outputs and recovery keys are stored on this Pod. Keep recovery files private, and download them before deleting a batch or terminating the Pod. A shared template contains the app, never another creator’s keys.</p><div id="uploads-list"></div></details></footer>
+</div>
+</main></body></html>
