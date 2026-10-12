@@ -7,12 +7,7 @@ export WATERMARK_DATA="${WATERMARK_DATA:-/workspace/watermark-studio-data}"
 export VIDEOSEAL_REPO="${VIDEOSEAL_REPO:-/workspace/watermark-studio-model/videoseal}"
 export COOKIE_SECURE=1
 export WATERMARK_DEVICE=cuda
-APP_PASSWORD="${APP_PASSWORD:-}"
-if [[ ${#APP_PASSWORD} -lt 8 ]]; then
-  read -r -s -p 'Choose a workspace password (at least 8 characters): ' APP_PASSWORD
-  printf '\n'
-  export APP_PASSWORD
-fi
+export APP_PASSWORD="${APP_PASSWORD:-password}"
 if [[ ${#APP_PASSWORD} -lt 8 ]]; then printf 'Password must be at least 8 characters.\n'; exit 1; fi
 command -v ffmpeg >/dev/null || { apt-get update; apt-get install -y ffmpeg; }
 python -m venv --system-site-packages .venv

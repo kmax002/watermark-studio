@@ -2,7 +2,7 @@
 
 ## Completed locally
 
-- 13 automated protocol/security tests pass on Windows/Python 3.11 and
+- 14 automated protocol/security tests pass on Windows/Python 3.11 and
   Ubuntu 24.04/Python 3.12. They cover authentication, request size/CSRF guards,
   resumable chunk writes, private-state redaction, withheld download protection,
   register validation, conflicting IDs, restart interruption and size budgets.
@@ -51,15 +51,28 @@ The successful HTTP test above ran after that fix.
   were uploaded again. The GPU checker recovered **RunPod test 001**, with agreement
   across the aggregate and both disjoint halves. Its report downloaded successfully.
 - An initial startup rejected an 8-character password because of the earlier
-  16-character rule. The Pod was stopped; the app and template now accept an
+  16-character rule. The Pod was stopped; that app and template version accepted an
   owner-selected password of 8+ characters. Thirteen local tests and an actual
   8-character login check passed after that change. The successful GPU run used
-  that updated version, with authentication still required and no shared password.
+  that updated version, with authentication still required and an owner-selected password.
 - All cloud media were neutral synthetic tests. No film or existing private key
   was uploaded. No network volume was created. The Pod was stopped at 01:55:12
   and deleted at 01:55:27 on 12 October 2026 (Europe/Zurich), confirmed by RunPod's
   audit log. The displayed balance moved from $7.37 to $7.33 (about $0.04 total),
   within the approved $3 cap. This is a rounded balance change, not an itemized bill.
+
+## Default-password setup update (v0.1.2)
+
+At the user's request, new deployments use the literal `password` when
+`APP_PASSWORD` is missing or empty. A nonempty custom value still takes precedence.
+Startup no longer asks for a password or requires a template override. The login
+page, public-template instructions and source ZIP instructions show the default.
+
+All 14 tests pass on Windows/Python 3.11 and Ubuntu/Python 3.12, including actual
+HTTP authentication with missing, empty and custom environment values. The custom
+case rejects the default password; all three cases still require login. Linux
+startup-script syntax also passes. No additional GPU Pod or model test was run
+for this setup-only update; the GPU results above refer to the stated earlier commit.
 
 ## Not established
 

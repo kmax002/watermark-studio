@@ -1,8 +1,10 @@
 import json
+import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from fastapi.testclient import TestClient
@@ -54,6 +56,26 @@ class PayloadTests(unittest.TestCase):
             bitrate_for_limit(.01, 3600, True)
         with self.assertRaises(ValueError):
             bitrate_for_limit(float('nan'), 100, True)
+
+
+class SetupTests(unittest.TestCase):
+    def test_default_login_and_custom_override(self):
+        for environment_value in (None, '', PASSWORD):
+            with self.subTest(APP_PASSWORD=environment_value), tempfile.TemporaryDirectory() as directory:
+                with patch.dict(os.environ):
+                    if environment_value is None:
+                        os.environ.pop('APP_PASSWORD', None)
+                    else:
+                        os.environ['APP_PASSWORD'] = environment_value
+                    with TestClient(create_app(directory, launch=False), base_url='https://testserver') as client:
+                        self.assertEqual(client.get('/api/state').status_code, 401)
+                        self.assertIn('Default password:', client.get('/').text)
+                        rejected = 'password' if environment_value else 'incorrect'
+                        self.assertEqual(client.post('/api/login', headers=HEADERS,
+                            json={'password': rejected}).status_code, 401)
+                        self.assertEqual(client.post('/api/login', headers=HEADERS,
+                            json={'password': environment_value or 'password'}).status_code, 200)
+                        self.assertEqual(client.get('/api/state').status_code, 200)
 
 
 class WebTests(unittest.TestCase):

@@ -3,11 +3,11 @@
 A private browser app for individually watermarked video copies and later copy-ID
 recovery. Designed for an NVIDIA Runpod Pod, with a portable Python/FFmpeg engine.
 This source package contains **no films, recipient records, existing copy IDs,
-private recovery keys, credentials or Windows Python installation**.
+private recovery keys, private credentials or Windows Python installation**.
 
 ## Use the app
 
-1. Unlock with your Pod's workspace password.
+1. Unlock with **`password`** (or your own password if you set one).
 2. Upload a video, choose a batch name, copy count and maximum size in decimal GB.
 3. Download and back up the **PRIVATE recovery JSON** and optional recipient CSV.
 4. Download the verified MP4s. Give each viewer only their assigned MP4.
@@ -30,15 +30,18 @@ Already verified downloads stay available. A new batch creates new IDs.
 
 One password protects one owner's workspace. Everyone with that password can see
 all its videos, private keys and jobs. Share the **template**, and have each creator
-launch their own Pod and set their own password. This is not a multi-tenant service.
+launch their own Pod. The default login is the public word `password`; optionally
+set `APP_PASSWORD` to a private value. This is not a multi-tenant service.
 
 ## Public RunPod template
 
 [Open Watermark Studio on RunPod](https://console.runpod.io/hub/template/kxe3r4aicz).
-Choose **Configure Pod**, select a GPU and set your own `APP_PASSWORD` through
-**Set overrides** before deploying. Each creator runs a separate private workspace.
+Choose **Configure Pod**, select a GPU and deploy. Wait for setup, open the
+**HTTP service on port 7860**, and sign in with **`password`**. No password setup
+is required. Each creator runs a separate workspace on their own Pod.
 The password unlocks the workspace and its files; recipients of downloaded MP4s
-do not need it. Each Pod accepts a password of at least 8 characters.
+do not need it. Optionally set `APP_PASSWORD` (8+ characters) through **Set overrides**
+before deploying to use your own password.
 
 Budget enough disk for the original plus all outputs and about 10 GB for software.
 RunPod's deployment screen may require you to add the template's recommended
@@ -54,10 +57,11 @@ See `VALIDATION.md` for the current deployment test status.
    limit, plus about 10 GB for software/model. Twenty 1.5 GB copies need at least
    30 GB for outputs alone. Use persistent storage mounted at `/workspace`.
 2. Upload and extract this source ZIP under `/workspace` using the Pod's file manager.
-3. In its terminal, run `bash start-runpod.sh` from the extracted folder. It asks for
-   a password if `APP_PASSWORD` is not already set, installs dependencies in its own
+3. In its terminal, run `bash start-runpod.sh` from the extracted folder. It uses
+   `password` when `APP_PASSWORD` is empty or unset, installs dependencies in its own
    environment, and fetches the exact public model revision and verified weights.
-4. Open the Pod's **HTTP service on port 7860**. Sign in with your chosen password.
+4. Open the Pod's **HTTP service on port 7860**. Sign in with **`password`** unless
+   you set your own password.
 
 Keep the process running in the Pod terminal. For routine sharing, use the
 container/template route below so the application starts automatically.
@@ -70,7 +74,7 @@ The simplest route uses the public source repository and Runpod's existing PyTor
 image. No container registry account or GitHub Actions permissions are required.
 `tools/template.py` prepares a template JSON for an immutable source commit. On
 first start, the Pod installs the app and verified public model on its volume.
-Later starts reuse that installation. Set `APP_PASSWORD` separately in each Pod.
+Later starts reuse that installation. `APP_PASSWORD` is optional; its default is `password`.
 
 ```sh
 python tools/template.py https://github.com/OWNER/watermark-studio FULL_COMMIT_SHA runpod-source-template.json
@@ -78,8 +82,8 @@ python tools/template.py https://github.com/OWNER/watermark-studio FULL_COMMIT_S
 
 Save that template in your Runpod account, test it on a GPU, then share its Runpod
 template link. Template creation does not launch a GPU; deploying a Pod does.
-The generated template is public and contains an empty password field. Each user
-must choose a private password at deployment; never put one in the template.
+The generated template is public. Its empty `APP_PASSWORD` field uses the app's
+default `password` automatically. Never put a private custom password in a public template.
 
 For faster startup, the optional prebuilt container route is:
 
@@ -100,8 +104,9 @@ For faster startup, the optional prebuilt container route is:
    a 30 GB container disk, and suitable `/workspace` volume capacity. The file
    `runpod-template.json` is the prebuilt-container configuration reference; its
    image is a placeholder. This is separate from the generated source template.
-4. Set your own **APP_PASSWORD of at least 8 characters at each deployment**.
-   Never bake it into an image or public template. With no password, startup fails.
+4. The default login is **`password`**, with no setup required. Optionally set
+   **APP_PASSWORD** to your own value (8+ characters) for that deployment.
+   Never bake a private custom password into an image or public template.
 5. Validate the GPU deployment using the neutral smoke test before sharing the
    template link. Only then publish/share the template through Runpod.
 
@@ -162,7 +167,8 @@ python tools/smoke_test.py /workspace/watermark-smoke
 ```
 
 For local HTTP only, set `COOKIE_SECURE=0` and bind to **127.0.0.1**. Runpod uses
-HTTPS and must keep `COOKIE_SECURE=1`. Set `APP_PASSWORD`, then start:
+HTTPS and must keep `COOKIE_SECURE=1`. The default login is `password`; optionally
+set `APP_PASSWORD` to your own value, then start:
 
 ```sh
 python -m uvicorn app.server:factory --factory --host 127.0.0.1 --port 7860 --workers 1 --no-access-log

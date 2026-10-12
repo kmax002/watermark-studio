@@ -49,7 +49,7 @@ class Job(BaseModel):
 def create_app(data_dir=None, password=None, launch=True):
     os.umask(0o077)
     root = Path(data_dir or os.environ.get('WATERMARK_DATA', BASE / '.data')).resolve()
-    secret = password if password is not None else os.environ.get('APP_PASSWORD', '')
+    secret = password if password is not None else (os.environ.get('APP_PASSWORD') or 'password')
     if len(secret) < 8:
         raise RuntimeError('Set APP_PASSWORD to at least 8 characters before starting.')
     root.mkdir(parents=True, exist_ok=True)

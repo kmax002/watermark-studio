@@ -11,7 +11,10 @@ Never release an output before full decode, file-size and strict watermark check
 Aggregate and both temporal halves must agree; inconclusive is not no watermark.
 Identify copy IDs, never claim a person is identified or leaks are prevented.
 
-One authenticated owner per Pod. Keep password-required startup, secure cookies
+One authenticated owner per Pod. At the user's request, missing or empty
+APP_PASSWORD defaults to the literal `password` for simple setup. Preserve a
+nonempty custom password (8+ characters) and never prompt during startup.
+Keep login required, secure cookies
 on HTTPS, bounded chunked uploads, allowlisted file downloads, bounded media
 protocols, single-worker locks, cancellation and no automatic restart/retry.
 
