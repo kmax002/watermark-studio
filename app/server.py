@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
 from .records import save, sha256, validate_register
+from .storage import require_copy_space, RESERVE_BYTES, TEMPORARY_COPIES
 
 BASE = Path(__file__).resolve().parents[1]
 CHUNK = 8 * 1024 * 1024
@@ -196,7 +197,9 @@ def create_app(data_dir=None, password=None, launch=True):
         for p in (root / 'uploads').glob('*/meta.json'):
             m = json.loads(p.read_text(encoding='utf8'))
             uploads.append({k: m[k] for k in ('id', 'name', 'size', 'kind', 'complete')})
-        return dict(jobs=jobs, uploads=uploads, busy=busy(), free_gb=round(shutil.disk_usage(root).free / 1e9, 1), chunk_bytes=CHUNK)
+        free = shutil.disk_usage(root).free
+        return dict(jobs=jobs, uploads=uploads, busy=busy(), free_gb=round(free / 1e9, 1), chunk_bytes=CHUNK,
+                    storage=dict(free_bytes=free, reserve_bytes=RESERVE_BYTES, temporary_copies=TEMPORARY_COPIES))
 
     @app.post('/api/uploads')
     async def upload_start(spec: Upload):
@@ -290,6 +293,11 @@ def create_app(data_dir=None, password=None, launch=True):
                 if not spec.recovery:
                     raise HTTPException(400, 'Choose a recovery file.')
                 recovery, _ = upload_record(spec.recovery, 'recovery')
+            else:
+                try:
+                    require_copy_space(root, spec.max_gb)
+                except ValueError as exc:
+                    raise HTTPException(400, str(exc)) from None
             ident = secrets.token_hex(16)
             path = root / 'jobs' / ident
             path.mkdir()

@@ -17,6 +17,10 @@ nonempty custom password (8+ characters) and never prompt during startup.
 Keep login required, secure cookies
 on HTTPS, bounded chunked uploads, allowlisted file downloads, bounded media
 protocols, single-worker locks, cancellation and no automatic restart/retry.
+Storage admission checks one output plus an equal temporary allowance and 2 GB
+headroom before launch and before every copy. Do not reserve every copy's size
+ceiling upfront; short clips can be much smaller. Keep finished outputs and the
+same private recovery register available if the next copy cannot fit.
 
 Tests must use synthetic content and fresh disposable registers. No paid Pod
 or remote media upload is implied by local development. Do not claim container,

@@ -3,7 +3,6 @@ import csv
 import json
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import time
@@ -14,6 +13,7 @@ import torch
 from . import media
 from .payload import encode, assess_frames
 from .records import CHECKPOINT, new_register, validate_register, sha256, save, verification_windows, bitrate_for_limit
+from .storage import require_copy_space
 
 
 class Engine:
@@ -100,12 +100,10 @@ class Engine:
 
 
 def create_copies(engine, source, dest, options, progress, publish):
+    require_copy_space(dest, options['max_gb'])
     info = media.probe(source)
     source_hash = sha256(source)
     rate = bitrate_for_limit(options['max_gb'], info['duration'], info['audio'])
-    required = options['max_gb'] * 1e9 * (options['copies'] + 1) + 2e9
-    if shutil.disk_usage(dest).free < required:
-        raise ValueError('Not enough free disk space for this batch and its size limit. Use fewer copies or more storage.')
     state = new_register(source_hash, options['copies'], options['label'], info)
     recovery = dest / 'PRIVATE-recovery.json'
     save(recovery, state)
@@ -122,6 +120,7 @@ def create_copies(engine, source, dest, options, progress, publish):
         raise ValueError('Source control unexpectedly matched. This batch was stopped.')
     for index, label in enumerate(state['copy_tokens'], 1):
         media.check_stop()
+        require_copy_space(dest, options['max_gb'], completed=index - 1, total=options['copies'])
         progress(f'Starting {label}', copy=index, total=options['copies'])
         target = dest / f'{label}.pending.mp4'
         final = dest / f'{label}.mp4'

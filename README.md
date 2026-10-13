@@ -9,6 +9,7 @@ private recovery keys, private credentials or Windows Python installation**.
 
 1. Unlock with **`password`** (or your own password if you set one).
 2. Upload a video, choose a batch name, copy count and maximum size in decimal GB.
+   The storage note shows free space and what the next copy needs.
 3. Download and back up the **PRIVATE recovery JSON** and optional recipient CSV.
 4. Download the verified MP4s. Give each viewer only their assigned MP4.
 5. To check a suspected leak, upload the leaked video and the original recovery
@@ -44,6 +45,14 @@ do not need it. Optionally set `APP_PASSWORD` (8+ characters) through **Set over
 before deploying to use your own password.
 
 Budget enough disk for the original plus all outputs and about 10 GB for software.
+Copies are processed one at a time. Starting and each subsequent copy require free
+space for one output at its chosen limit, an equal temporary allowance, and 2 GB
+headroom: **5 GB free at the default 1.5 GB limit**. The app does not reserve every
+copy's maximum upfront. Short videos can produce much smaller files, so a batch
+may fit even when its combined maximum would not. The page shows both numbers.
+If storage falls below the next-copy allowance, processing stops before that copy;
+finished downloads and the recovery JSON remain available. Download and back them
+up before removing a batch. Unfinished copies do not resume automatically.
 RunPod's deployment screen may require you to add the template's recommended
 volume explicitly. If you use only container storage, download everything before
 stopping as well as terminating the Pod. Storage on RunPod is never your backup.
@@ -131,6 +140,10 @@ charges are billed by Runpod while the rented resources exist.
   must identify the same registered ID. These are sampled watermark checks.
 - Cancel stops processing; verified copies and the recovery file remain. Files can
   be removed explicitly in the app after backing them up. No background auto-retry.
+
+Version 0.1.3 replaces the old full-batch storage rejection. Existing Pods pinned
+to an earlier release keep that version; refreshing the browser does not update
+their app. New deployments from the public template use the updated release.
 
 ## Recovery format and limits
 

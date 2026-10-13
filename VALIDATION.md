@@ -1,8 +1,8 @@
-# Validation, 12 October 2026
+# Validation, updated 13 October 2026
 
 ## Completed locally
 
-- 14 automated protocol/security tests pass on Windows/Python 3.11 and
+- 18 automated protocol/security tests pass on Windows/Python 3.11 and
   Ubuntu 24.04/Python 3.12. They cover authentication, request size/CSRF guards,
   resumable chunk writes, private-state redaction, withheld download protection,
   register validation, conflicting IDs, restart interruption and size budgets.
@@ -73,6 +73,28 @@ HTTP authentication with missing, empty and custom environment values. The custo
 case rejects the default password; all three cases still require login. Linux
 startup-script syntax also passes. No additional GPU Pod or model test was run
 for this setup-only update; the GPU results above refer to the stated earlier commit.
+
+## Storage admission update (v0.1.3, 13 October)
+
+The old check reserved `(copies + 1) * maximum GB + 2 GB` before starting,
+regardless of duration. A 50-copy batch at 1.5 GB therefore required 78.5 GB free,
+even if its short outputs would be much smaller. Admission now requires only one
+copy's limit plus an equal temporary allowance and 2 GB headroom. It is checked
+before launching the worker and again before each copy. The page shows actual
+free space, next-copy allowance, and the separate full-batch maximum estimate.
+
+All 18 tests pass on Windows and Ubuntu. Regression cases admit 50/30/20 copies
+at the 5 GB boundary, reject insufficient space before creating a job, and leave
+leak checks independent of output storage. A simulated renderer and decreasing
+free-space fixture verify a stop after the first checked copy preserves that
+file, its verification record and the original 50-copy recovery register.
+This fixture does not run a model or establish video quality.
+
+A neutral local browser fixture simulated 6 GB free. Default-password login,
+50-copy admission at 1.5 GB, immediate rejection of a 10 GB per-copy limit, and
+switching to leak checking all behaved as expected. JavaScript syntax passes.
+No GPU Pod, paid generation, private media, or Elliot account was used or changed.
+The earlier RunPod GPU validation remains limited to its stated source commit.
 
 ## Not established
 

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -174,6 +175,32 @@ class WebTests(unittest.TestCase):
         self.login()
         self.assertEqual(self.client.get('/api/state').json()['jobs'][0]['status'], 'interrupted')
         self.assertFalse((self.root/'jobs'/ident/'PRIVATE-recovery.json').exists())
+
+    def test_batch_storage_preflight_checks_one_copy_before_creating_job(self):
+        self.login()
+        video = self.upload()
+        with patch('app.storage.shutil.disk_usage', return_value=SimpleNamespace(free=4_999_999_999)):
+            response = self.client.post('/api/jobs', headers=HEADERS,
+                json=dict(kind='create', video=video, copies=50, max_gb=1.5))
+            self.assertEqual(response.status_code, 400)
+            self.assertIn('5.00 GB', response.json()['detail'])
+            self.assertEqual(list((self.root/'jobs').iterdir()), [])
+        with patch('app.storage.shutil.disk_usage', return_value=SimpleNamespace(free=5_000_000_000)):
+            for copies in (50, 30, 20):
+                response = self.client.post('/api/jobs', headers=HEADERS,
+                    json=dict(kind='create', video=video, copies=copies, max_gb=1.5))
+                self.assertEqual(response.status_code, 200, response.text)
+            state = self.client.get('/api/state').json()
+            self.assertEqual(state['storage']['free_bytes'], 5_000_000_000)
+
+    def test_leak_check_does_not_reserve_batch_output_space(self):
+        self.login()
+        video = self.upload()
+        recovery = self.upload(json.dumps(register()).encode(), 'recovery')
+        with patch('app.storage.shutil.disk_usage', return_value=SimpleNamespace(free=1_000_000_000)):
+            response = self.client.post('/api/jobs', headers=HEADERS,
+                json=dict(kind='check', video=video, recovery=recovery))
+            self.assertEqual(response.status_code, 200, response.text)
 
     def test_static_csp_and_no_directory_listing(self):
         r = self.client.get('/')

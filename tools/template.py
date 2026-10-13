@@ -25,6 +25,7 @@ spec = dict(name='Watermark Studio', category='NVIDIA', imageName='runpod/pytorc
          'WATERMARK_DATA':'/workspace/watermark-studio-data'},
     readme='Invisible per-copy video watermarking. Deploy, open HTTP port 7860 after first-time setup, and sign in with password. '
            'No password configuration is required. Optionally set APP_PASSWORD (8+ characters) to use your own. '
+           'Copies are processed one at a time; the app checks free space before each copy and preserves finished downloads if storage gets low. '
            'Download videos and back up the private recovery JSON, then terminate the Pod. '
            'Later, use a fresh Pod with only the suspected leak and saved recovery JSON to recover the copy number. '
            'Experimental: identifies an issued copy, not a person. Source: ' + repo)

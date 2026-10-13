@@ -22,6 +22,7 @@
 <label for="batch-label">Batch name</label><input id="batch-label" value="Screening" maxlength="40" pattern="[A-Za-z0-9][A-Za-z0-9 _-]{0,39}" required><p class="hint">Files will be named Screening 001, Screening 002, and so on.</p>
 <div class="form-row"><div><label for="copies">Number of copies</label><input id="copies" type="number" min="1" max="100" step="1" value="5" required></div><div><label for="max-gb">Maximum size per copy</label><div class="unit-input"><input id="max-gb" type="number" min="0.01" max="100" step="0.01" value="1.5" required><span>GB</span></div></div></div>
 <p class="hint">Each MP4 is checked against this limit before download. A very small limit can make the watermark unreadable.</p>
+<p id="storage-budget" class="hint" role="status" aria-live="polite">Checking available storage…</p>
 <details><summary>What happens to the video?</summary><p>SDR video keeps its proportions, up to 1920 pixels on its longest edge, and is encoded as H.264. Variable frame rates are made constant. The first audio track is converted to AAC. Your uploaded original is preserved.</p><p>HDR, rotation metadata and non-square pixels need a normalised SDR export first. Seven windows are checked in longer videos; short videos receive one window check. Recovery must agree across both halves of every window.</p></details>
 </div>
 <div id="check-options" hidden>
