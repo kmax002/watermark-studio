@@ -1,8 +1,8 @@
-# Validation, updated 13 October 2026
+# Validation, updated 18 October 2026
 
 ## Completed locally
 
-- 18 automated protocol/security tests pass on Windows/Python 3.11 and
+- 21 automated protocol/security tests pass on Windows/Python 3.11 and
   Ubuntu 24.04/Python 3.12. They cover authentication, request size/CSRF guards,
   resumable chunk writes, private-state redaction, withheld download protection,
   register validation, conflicting IDs, restart interruption and size budgets.
@@ -95,6 +95,26 @@ A neutral local browser fixture simulated 6 GB free. Default-password login,
 switching to leak checking all behaved as expected. JavaScript syntax passes.
 No GPU Pod, paid generation, private media, or Elliot account was used or changed.
 The earlier RunPod GPU validation remains limited to its stated source commit.
+
+## Starting-number update (v0.1.4, 18 October)
+
+The creation form now accepts **Start numbering at**, defaulting to 1. It shows
+the full filename range before submission. Starting at 16 with five copies
+creates labels 016-020, with fresh random keys and tokens for the new batch.
+Existing recovery files and the model/payload format are unchanged.
+
+All 21 tests pass on Windows and Ubuntu. Tests cover default numbering, 16-20,
+the 999/1000 boundary, invalid inputs, and persisted worker options. The simulated
+renderer/storage fixture confirms offset labels reach the MP4 filename, recipient
+CSV, recovery JSON and verification record while progress still counts completed
+copies from one. Reading the new recovery register preserves its saved labels.
+
+A neutral local browser fixture verified default-password login, the initial
+001-005 preview, the changed 016-020 preview, and submission of five copies with
+starting number 16. The saved worker request contained those exact values. Workers
+were disabled for this form test; no GPU, model inference or private media was
+used. JavaScript syntax and diff checks pass. The earlier GPU validation remains
+limited to its stated source commit.
 
 ## Not established
 

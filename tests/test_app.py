@@ -23,6 +23,22 @@ def register():
 
 
 class PayloadTests(unittest.TestCase):
+    def test_numbering_offset_keeps_fresh_keys_and_saved_labels(self):
+        args = ('ab' * 32, 5, 'Screening', dict(width=1280, height=720, fps='24'))
+        original = new_register(*args)
+        extra = new_register(*args, start_number=16)
+        self.assertEqual(list(original['copy_tokens']), [f'Screening {i:03d}' for i in range(1, 6)])
+        self.assertEqual(list(extra['copy_tokens']), [f'Screening {i:03d}' for i in range(16, 21)])
+        self.assertNotEqual(extra['key_hex'], original['key_hex'])
+        self.assertEqual(validate_register(json.loads(json.dumps(extra))), extra)
+        crossing = new_register(*args, start_number=999)
+        self.assertEqual(list(crossing['copy_tokens'])[:2], ['Screening 999', 'Screening 1000'])
+
+    def test_invalid_starting_numbers(self):
+        for start in (0, -1, 1.5, True, '16', 1000000):
+            with self.subTest(start=start), self.assertRaises(ValueError):
+                new_register('ab' * 32, 5, 'Test', dict(width=1280, height=720, fps='24'), start_number=start)
+
     def test_fresh_keys_and_unique_copies(self):
         a, b = register(), register()
         self.assertNotEqual(a['key_hex'], b['key_hex'])
@@ -175,6 +191,21 @@ class WebTests(unittest.TestCase):
         self.login()
         self.assertEqual(self.client.get('/api/state').json()['jobs'][0]['status'], 'interrupted')
         self.assertFalse((self.root/'jobs'/ident/'PRIVATE-recovery.json').exists())
+
+    def test_start_number_is_saved_for_worker_and_invalid_values_rejected(self):
+        self.login()
+        video = self.upload()
+        for start in (0, -1, 1.5, True, '16', 1000000):
+            response = self.client.post('/api/jobs', headers=HEADERS,
+                json=dict(kind='create', video=video, copies=5, start_number=start))
+            self.assertEqual(response.status_code, 422, response.text)
+        self.assertEqual(list((self.root/'jobs').iterdir()), [])
+        for extra, expected in (({}, 1), ({'start_number': 16}, 16)):
+            response = self.client.post('/api/jobs', headers=HEADERS,
+                json=dict(kind='create', video=video, copies=5, **extra))
+            self.assertEqual(response.status_code, 200, response.text)
+            request = json.loads((self.root/'jobs'/response.json()['id']/'request.json').read_text())
+            self.assertEqual(request['options']['start_number'], expected)
 
     def test_batch_storage_preflight_checks_one_copy_before_creating_job(self):
         self.login()

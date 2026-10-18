@@ -8,7 +8,8 @@ private recovery keys, private credentials or Windows Python installation**.
 ## Use the app
 
 1. Unlock with **`password`** (or your own password if you set one).
-2. Upload a video, choose a batch name, copy count and maximum size in decimal GB.
+2. Upload a video, choose a batch name, starting number, copy count and maximum
+   size in decimal GB. Numbering starts at 1 unless you change it.
    The storage note shows free space and what the next copy needs.
 3. Download and back up the **PRIVATE recovery JSON** and optional recipient CSV.
 4. Download the verified MP4s. Give each viewer only their assigned MP4.
@@ -28,6 +29,15 @@ resume. Completed uploads and job status survive a page refresh. Processing
 continues with the browser closed while the Pod remains running. After a server
 restart, unfinished jobs become interrupted and are **not automatically repeated**.
 Already verified downloads stay available. A new batch creates new IDs.
+
+### Making additional copies
+
+Use the original unwatermarked video and set **Start numbering at** to the next
+number. After copies 001-015, choose **16** and **5 copies** to create 016-020.
+The preview shows the names before you start; filenames, the recipient log and
+later recovery results use those same numbers. Each new batch still creates
+fresh random watermarks and its own private recovery JSON. Keep both batches'
+recovery files; this changes numbering, not the identity of earlier copies.
 
 One password protects one owner's workspace. Everyone with that password can see
 all its videos, private keys and jobs. Share the **template**, and have each creator
@@ -141,7 +151,8 @@ charges are billed by Runpod while the rented resources exist.
 - Cancel stops processing; verified copies and the recovery file remain. Files can
   be removed explicitly in the app after backing them up. No background auto-retry.
 
-Version 0.1.3 replaces the old full-batch storage rejection. Existing Pods pinned
+Version 0.1.4 adds a selectable starting number; version 0.1.3 replaced the old
+full-batch storage rejection. Existing Pods pinned
 to an earlier release keep that version; refreshing the browser does not update
 their app. New deployments from the public template use the updated release.
 

@@ -104,7 +104,8 @@ def create_copies(engine, source, dest, options, progress, publish):
     info = media.probe(source)
     source_hash = sha256(source)
     rate = bitrate_for_limit(options['max_gb'], info['duration'], info['audio'])
-    state = new_register(source_hash, options['copies'], options['label'], info)
+    state = new_register(source_hash, options['copies'], options['label'], info,
+                         start_number=options.get('start_number', 1))
     recovery = dest / 'PRIVATE-recovery.json'
     save(recovery, state)
     publish(recovery.name, 'Private recovery file', 'private')

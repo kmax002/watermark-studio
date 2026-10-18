@@ -41,6 +41,7 @@ class Job(BaseModel):
     video: str = Field(pattern='^[0-9a-f]{32}$')
     recovery: str | None = Field(default=None, pattern='^[0-9a-f]{32}$')
     copies: int = Field(default=1, ge=1, le=100, strict=True)
+    start_number: int = Field(default=1, ge=1, le=999999, strict=True)
     label: str = Field(default='Copy', pattern='^[A-Za-z0-9][A-Za-z0-9 _-]{0,39}$')
     max_gb: float = Field(default=1.5, ge=.01, le=100, allow_inf_nan=False)
     start: float = Field(default=0, ge=0, le=14400, allow_inf_nan=False)

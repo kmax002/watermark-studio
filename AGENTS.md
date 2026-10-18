@@ -7,6 +7,9 @@ source packages, containers or public repositories.
 
 Use the exact pinned PixelSeal checkpoint and payload format. Never regenerate
 existing recovery IDs when reading a register. New batches receive fresh keys.
+The optional starting number defaults to 1 and changes copy labels consistently
+in filenames, recipient CSVs and recovery results. It never resumes or reuses
+an earlier batch's keys or IDs. Keep the recovery JSON for every batch.
 Never release an output before full decode, file-size and strict watermark checks.
 Aggregate and both temporal halves must agree; inconclusive is not no watermark.
 Identify copy IDs, never claim a person is identified or leaks are prevented.

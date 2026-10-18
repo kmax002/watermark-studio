@@ -19,7 +19,8 @@
 <label class="saved-label" for="video-select">Uploaded video</label><select id="video-select" required><option value="">Choose or upload a video</option></select>
 <div id="create-options">
 <div class="section-title"><span class="step">02</span><h2>Set up your copies</h2></div>
-<label for="batch-label">Batch name</label><input id="batch-label" value="Screening" maxlength="40" pattern="[A-Za-z0-9][A-Za-z0-9 _-]{0,39}" required><p class="hint">Files will be named Screening 001, Screening 002, and so on.</p>
+<div class="form-row"><div><label for="batch-label">Batch name</label><input id="batch-label" value="Screening" maxlength="40" pattern="[A-Za-z0-9][A-Za-z0-9 _-]{0,39}" required></div><div><label for="start-number">Start numbering at</label><input id="start-number" type="number" min="1" max="999999" step="1" value="1" required></div></div><p id="naming-preview" class="hint" aria-live="polite">Files will be named Screening 001 through Screening 005.</p>
+<p class="hint">Making more copies? Use the original unwatermarked video and choose the next number, such as 16. This creates fresh watermarks and a new recovery file; keep both batches’ recovery files.</p>
 <div class="form-row"><div><label for="copies">Number of copies</label><input id="copies" type="number" min="1" max="100" step="1" value="5" required></div><div><label for="max-gb">Maximum size per copy</label><div class="unit-input"><input id="max-gb" type="number" min="0.01" max="100" step="0.01" value="1.5" required><span>GB</span></div></div></div>
 <p class="hint">Each MP4 is checked against this limit before download. A very small limit can make the watermark unreadable.</p>
 <p id="storage-budget" class="hint" role="status" aria-live="polite">Checking available storage…</p>

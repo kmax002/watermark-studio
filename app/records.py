@@ -52,13 +52,15 @@ def validate_register(value):
     return value
 
 
-def new_register(source_hash, copies, label, media):
+def new_register(source_hash, copies, label, media, start_number=1):
     if type(copies) is not int or not 1 <= copies <= 100:
         raise ValueError('Choose 1 to 100 copies.')
+    if type(start_number) is not int or not 1 <= start_number <= 999999:
+        raise ValueError('Choose a starting number from 1 to 999999.')
     if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9 _-]{0,39}', label):
         raise ValueError('Use a short label with letters, numbers, spaces or hyphens.')
     tokens = {}
-    for i in range(1, copies + 1):
+    for i in range(start_number, start_number + copies):
         token = secrets.token_hex(4)
         while token in tokens.values():
             token = secrets.token_hex(4)
