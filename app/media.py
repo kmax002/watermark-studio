@@ -4,6 +4,7 @@ import json
 import math
 import os
 from pathlib import Path
+import queue
 import subprocess
 import threading
 import time
@@ -118,20 +119,56 @@ def frames(path, width, height, fps, start=0, seconds=None, batch=2):
     p = spawn(args, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     timer = threading.Timer(max(120, (seconds or 14400) * 20), p.terminate)
     timer.start()
+    ready = queue.Queue(maxsize=1)
+    closed = threading.Event()
+    end = object()
+
+    def offer(value):
+        while not closed.is_set():
+            try:
+                ready.put(value, timeout=.1)
+                return
+            except queue.Full:
+                pass
+
+    def decode():
+        try:
+            size = width * height * 3
+            while not closed.is_set():
+                raw = read_exact(p.stdout, size * batch)
+                if not raw:
+                    break
+                if len(raw) % size:
+                    raise ValueError('An incomplete video frame was decoded.')
+                offer(np.frombuffer(raw, 'uint8').reshape(-1, height, width, 3).copy())
+            if not closed.is_set() and p.wait(timeout=30):
+                check_stop()
+                raise ValueError('Video decoding failed or timed out.')
+        except Exception as exc:
+            offer(exc)
+        finally:
+            offer(end)
+
+    reader = threading.Thread(target=decode, name='watermark-frame-reader', daemon=True)
+    reader.start()
     try:
-        size = width * height * 3
         while True:
-            raw = read_exact(p.stdout, size * batch)
-            if not raw:
-                break
-            if len(raw) % size:
-                raise ValueError('An incomplete video frame was decoded.')
-            yield np.frombuffer(raw, 'uint8').reshape(-1, height, width, 3).copy()
-        if p.wait(timeout=30):
             check_stop()
-            raise ValueError('Video decoding failed or timed out.')
+            try:
+                value = ready.get(timeout=.1)
+            except queue.Empty:
+                continue
+            if value is end:
+                break
+            if isinstance(value, Exception):
+                raise value
+            yield value
     finally:
+        closed.set()
         timer.cancel()
-        p.stdout.close()
+        # Terminate first to unblock a reader waiting on FFmpeg; no worker is left
+        # producing frames when the consumer cancels, fails or closes early.
         dispose(p)
+        reader.join(timeout=15)
+        p.stdout.close()
 

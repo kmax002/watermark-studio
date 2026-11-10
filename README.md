@@ -151,7 +151,12 @@ charges are billed by Runpod while the rented resources exist.
 - Cancel stops processing; verified copies and the recovery file remain. Files can
   be removed explicitly in the app after backing them up. No background auto-retry.
 
-Version 0.1.4 adds a selectable starting number; version 0.1.3 replaced the old
+Version 0.1.5 overlaps decoding with GPU work, reduces CPU/GPU transfer traffic,
+and uses the Pod's allocated CPU capacity for encoding. The page shows rendering speed and estimated rendering time left for
+the current copy; verification follows separately. The watermark model, strength,
+two-frame watermark propagation, encoding quality and release checks are unchanged.
+
+Version 0.1.4 added a selectable starting number; version 0.1.3 replaced the old
 full-batch storage rejection. Existing Pods pinned
 to an earlier release keep that version; refreshing the browser does not update
 their app. New deployments from the public template use the updated release.
@@ -202,6 +207,27 @@ One server owns a data directory using an OS file lock. Do not run multiple work
 Authenticated routes serve only explicitly released files. Uploads stream to owned
 IDs, all jobs are local subprocesses, and supported media demuxers/network protocols
 are restricted. Public state contains no raw payloads, recovery secrets or server paths.
+
+Frames are decoded ahead into one bounded buffer while the GPU processes the
+current batch. Two-frame batches remain the default: a synthetic H200 test found
+them faster than batches of 8, 16 or 32 at full-resolution FP32 attenuation.
+Encoding uses H.264 `libx264`, medium/CRF18, with up to 16 CPU threads, respecting
+container CPU quotas and leaving capacity for decoding and the app. Optional startup overrides are
+`WATERMARK_BATCH_FRAMES` (even numbers 2-64) and `WATERMARK_ENCODER_THREADS` (1-64,
+capped by the detected CPU allocation). These change processing capacity, not
+the stored watermark settings. Memory failures remain terminal; there is no
+automatic replay with different settings.
+
+Each verification report includes render speed and time spent waiting on input,
+watermarking/transfers, and encoding. These are wall times in an overlapping
+pipeline, not isolated component benchmarks. For an explicit synthetic 1080p test:
+
+```sh
+python tools/benchmark.py /workspace/new-neutral-benchmark --seconds 28
+```
+
+This writes a new synthetic source, one checked copy and a recompressed recovery
+test. It does not read your movies. Run it only when the GPU is free of other jobs.
 
 See `VALIDATION.md` for what was actually tested. The source package is experimental.
 

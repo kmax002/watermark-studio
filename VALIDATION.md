@@ -1,4 +1,4 @@
-# Validation, updated 18 October 2026
+# Validation, updated 10 November 2026
 
 ## Completed locally
 
@@ -115,6 +115,37 @@ starting number 16. The saved worker request contained those exact values. Worke
 were disabled for this form test; no GPU, model inference or private media was
 used. JavaScript syntax and diff checks pass. The earlier GPU validation remains
 limited to its stated source commit.
+
+## Processing update (v0.1.5, 10 November)
+
+The decoder now prepares the next frame batch while GPU watermarking and encoding
+run. Input frames cross to the GPU as bytes before FP32 normalization; detection
+reduces spatial scores on the GPU before transfer. Encoding uses the allocated
+CPU quota, up to 16 threads. The model, full-resolution FP32 attenuation, strength,
+step size, medium/CRF18 encoding settings and strict release checks are unchanged.
+The UI reports measured rendering speed and time remaining for the current copy;
+verification time is separate.
+
+All 28 automated tests pass on Windows/Python 3.11 and the existing RunPod's
+Ubuntu 24.04/Python 3.12 environment. Added checks cover cgroup CPU quotas, bounded
+even batches, unchanged pixel normalization, ordered prefetched frames, decoder
+failure and cancellation cleanup. JavaScript syntax and diff checks pass.
+
+Real GPU tests used neutral synthetic 1920x1080/24fps video with tone audio on an
+H200 SXM, PyTorch 2.8/CUDA 12.8 and a 20.4-CPU quota. On the same 12-second input,
+the original renderer took 6.804 seconds (42.3 frames/sec); the revised renderer
+with two-frame batches and 16 encoder threads took 4.162 seconds (69.2 frames/sec).
+Batches of 8, 16 and 32 were slower, so two remains the default. All four revised
+outputs passed full decode and strict recovery. These are individual wall-time
+measurements, not repeated statistical trials or predicted movie throughput.
+
+A separate 28-second run with the final defaults rendered 672 frames in 8.634
+seconds (77.8 frames/sec). Creation plus all seven verification windows took
+22.782 seconds. The output passed complete decode, size and aggregate/two-half
+checks; a CRF24 recompression recovered the correct label. The source hash was
+unchanged. This tests watermark recovery, not perceptual quality on arbitrary films.
+The updated detector also strictly recovered the old-version synthetic output
+using its original recovery JSON, without reissuing its IDs.
 
 ## Not established
 

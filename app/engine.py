@@ -14,6 +14,7 @@ from . import media
 from .payload import encode, assess_frames
 from .records import CHECKPOINT, new_register, validate_register, sha256, save, verification_windows, bitrate_for_limit
 from .storage import require_copy_space
+from .performance import cpu_budget, encoder_threads, frame_batch
 
 
 class Engine:
@@ -33,23 +34,30 @@ class Engine:
         before = Path.cwd()
         try:
             os.chdir(repo)
-            torch.set_num_threads(4)
+            torch.set_num_threads(min(4, cpu_budget()))
             self.model = setup_model(OmegaConf.load(repo / 'videoseal/cards/pixelseal.yaml'), checkpoint).eval().to(self.device)
         finally:
             os.chdir(before)
         self.model.step_size = 2
         self.model.blender.scaling_w = .2
-        self.batch = 2
+        self.batch = frame_batch()
+        self.encoder_threads = encoder_threads()
+
+    def tensor(self, arr):
+        # Transfer compact bytes, then expand to FP32 on the GPU (4x less input traffic).
+        return torch.from_numpy(arr).to(self.device).permute(0, 3, 1, 2).float().div_(255)
 
     def detect(self, path, state, start=0, seconds=30):
         values = []
         s = state['settings']
         for arr in media.frames(path, s['width'], s['height'], 6, start, seconds, self.batch):
             media.check_stop()
-            x = torch.from_numpy(arr).permute(0, 3, 1, 2).float().to(self.device) / 255
+            x = self.tensor(arr)
             with torch.inference_mode():
-                prediction = self.model.detect(x, is_video=True)['preds'].float().cpu().numpy()
-            values.append(prediction.reshape(len(arr), 257, -1).mean(-1)[:, 1:])
+                prediction = self.model.detect(x, is_video=True)['preds'].float()
+                # Transfer only per-frame scores, not the much larger spatial maps.
+                values.append(prediction.reshape(len(arr), 257, -1).mean(-1)[:, 1:].cpu().numpy())
+            del x, prediction
         if not values:
             raise ValueError('No frames were available at that starting time.')
         result = assess_frames(np.concatenate(values), bytes.fromhex(state['key_hex']), state['source_sha256'], set(state['copy_tokens'].values()))
@@ -68,30 +76,53 @@ class Engine:
         args += media.input_args(source)
         args += ['-t', str(info['duration']), '-map', '0:v:0', '-map', '1:a:0?', '-map_metadata', '-1', '-map_chapters', '-1',
             '-vf', 'scale=in_range=full:out_range=tv:out_color_matrix=bt709,format=yuv420p',
-            '-c:v', 'libx264', '-preset', 'medium', '-threads', '4', '-crf', '18',
+            '-c:v', 'libx264', '-preset', 'medium', '-threads', str(self.encoder_threads), '-crf', '18',
             '-maxrate', str(rate), '-bufsize', str(rate * 2), '-color_range', 'tv', '-colorspace', 'bt709',
             '-color_trc', 'bt709', '-color_primaries', 'bt709', '-c:a', 'aac', '-b:a', '192k', '-movflags', '+faststart', str(target)]
         p = media.spawn(args, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         count = 0
         last = 0
+        began = time.monotonic()
+        timing = dict(decode_wait_seconds=0., watermark_and_transfer_seconds=0., encode_wait_seconds=0.)
         iterator = media.frames(source, w, h, info['fps'], seconds=info['duration'], batch=self.batch)
         try:
-            for arr in iterator:
+            while True:
+                tick = time.monotonic()
+                try:
+                    arr = next(iterator)
+                except StopIteration:
+                    break
+                timing['decode_wait_seconds'] += time.monotonic() - tick
                 media.check_stop()
-                x = torch.from_numpy(arr).permute(0, 3, 1, 2).float().to(self.device) / 255
+                tick = time.monotonic()
+                x = self.tensor(arr)
                 with torch.inference_mode():
                     y = self.model.embed(x, msgs=msg, is_video=True, lowres_attenuation=False)['imgs_w']
                     raw = y.mul(255).round().clamp(0, 255).byte().permute(0, 2, 3, 1).contiguous().cpu().numpy().tobytes()
+                del x, y
+                timing['watermark_and_transfer_seconds'] += time.monotonic() - tick
+                tick = time.monotonic()
                 p.stdin.write(raw)
+                timing['encode_wait_seconds'] += time.monotonic() - tick
                 count += len(arr)
                 if time.monotonic() - last > 1:
-                    progress(f'Watermarking {label}', frames=count, total_frames=info['frames'])
+                    elapsed = time.monotonic() - began
+                    progress(f'Watermarking {label}', frames=count, total_frames=info['frames'],
+                             render_fps=round(count / elapsed, 1), render_elapsed_seconds=round(elapsed, 1),
+                             batch_frames=self.batch, encoder_threads=self.encoder_threads, device=self.device)
                     last = time.monotonic()
+            tick = time.monotonic()
             p.stdin.close()
             if p.wait(timeout=180):
                 raise ValueError('Encoding did not finish. Check free disk space.')
+            timing['encode_wait_seconds'] += time.monotonic() - tick
             if abs(count - info['frames']) > 2:
                 raise ValueError('Decoded duration does not match the source. Export a constant-frame-rate source.')
+            elapsed = time.monotonic() - began
+            return dict(**{k: round(v, 3) for k, v in timing.items()}, render_seconds=round(elapsed, 3),
+                        render_fps=round(count / elapsed, 2), batch_frames=self.batch,
+                        encoder_threads=self.encoder_threads, device=self.device,
+                        note='Wall times include pipeline waits; FFmpeg runs concurrently. Verification is separate.')
         finally:
             iterator.close()
             if not p.stdin.closed:
@@ -126,7 +157,7 @@ def create_copies(engine, source, dest, options, progress, publish):
         target = dest / f'{label}.pending.mp4'
         final = dest / f'{label}.mp4'
         try:
-            engine.render(source, target, state, label, info, rate, progress)
+            processing = engine.render(source, target, state, label, info, rate, progress)
             progress(f'Checking the complete video: {label}', frames=0, total_frames=0)
             if target.stat().st_size > options['max_gb'] * 1e9:
                 raise ValueError('Encoded copy exceeds the size limit and was withheld. Try a larger limit.')
@@ -147,6 +178,7 @@ def create_copies(engine, source, dest, options, progress, publish):
             if sha256(source) != source_hash:
                 raise ValueError('Source changed during processing.')
             report = dict(copy=label, sha256=sha256(target), bytes=target.stat().st_size, windows=windows,
+                          processing=processing,
                           full_decode_passed=True, audio='First track converted to AAC 192 kbps' if info['audio'] else 'No source audio')
             target.rename(final)
             reports.append(report)
