@@ -114,8 +114,14 @@ def frames(path, width, height, fps, start=0, seconds=None, batch=2):
     args = ['ffmpeg', '-v', 'error', '-nostdin', '-threads', '2', '-filter_threads', '2', '-ss', str(start)] + input_args(path)
     if seconds is not None:
         args += ['-t', str(seconds)]
-    args += ['-map', '0:v:0', '-an', '-sn', '-dn', '-vf', f'fps={fps},scale={width}:{height}:flags=bicubic',
-             '-pix_fmt', 'rgb24', '-f', 'rawvideo', 'pipe:1']
+    # Detection must retain native frames: a fixed sampling interval can select
+    # only the weak phase of a temporally propagated watermark. Passthrough also
+    # avoids inventing duplicate evidence for low/variable-frame-rate footage.
+    filters = ([f'fps={fps}'] if fps is not None else []) + [f'scale={width}:{height}:flags=bicubic']
+    args += ['-map', '0:v:0', '-an', '-sn', '-dn', '-vf', ','.join(filters)]
+    if fps is None:
+        args += ['-fps_mode', 'passthrough']
+    args += ['-pix_fmt', 'rgb24', '-f', 'rawvideo', 'pipe:1']
     p = spawn(args, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
     timer = threading.Timer(max(120, (seconds or 14400) * 20), p.terminate)
     timer.start()

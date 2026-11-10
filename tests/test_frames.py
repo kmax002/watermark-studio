@@ -34,6 +34,20 @@ class FrameTests(unittest.TestCase):
         self.assertFalse(media.PROCESSES)
         self.assertFalse(any(t.name == 'watermark-frame-reader' for t in threading.enumerate()))
 
+    def test_native_frames_are_not_dropped_or_duplicated(self):
+        native = np.concatenate(list(media.frames(self.source, 256, 256, None, batch=2)))
+        expected = np.concatenate(list(media.frames(self.source, 256, 256, 7, batch=2)))
+        sampled = np.concatenate(list(media.frames(self.source, 256, 256, 6, batch=2)))
+        self.assertEqual(len(native), 7)
+        self.assertEqual(len(sampled), 6)
+        self.assertTrue(np.array_equal(native, expected))
+        # Native 1 fps remains four real frames, not 24 resampled duplicates.
+        slow = Path(self.temp.name) / 'slow.mp4'
+        subprocess.run(['ffmpeg', '-nostdin', '-v', 'error', '-f', 'lavfi', '-i',
+            'testsrc2=size=256x256:rate=1:duration=4', '-c:v', 'libx264', '-threads', '1',
+            '-pix_fmt', 'yuv420p', str(slow)], check=True)
+        self.assertEqual(sum(len(x) for x in media.frames(slow, 256, 256, None, batch=2)), 4)
+
     def test_decoder_failure_reaches_consumer(self):
         self.source.write_bytes(b'not a video')
         with self.assertRaisesRegex(ValueError, 'Video decoding failed'):

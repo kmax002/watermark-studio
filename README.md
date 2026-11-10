@@ -151,6 +151,11 @@ charges are billed by Runpod while the rented resources exist.
 - Cancel stops processing; verified copies and the recovery file remain. Files can
   be removed explicitly in the app after backing them up. No background auto-retry.
 
+Version 0.1.6 checks every native frame within each verification window and leak
+check. The old fixed 6 fps sampling could repeatedly select weaker frames and
+reject a recoverable copy. Both temporal halves and the aggregate must still
+authenticate the same ID; frames are never duplicated to meet the evidence count.
+
 Version 0.1.5 overlaps decoding with GPU work, reduces CPU/GPU transfer traffic,
 and uses the Pod's allocated CPU capacity for encoding. The page shows rendering speed and estimated rendering time left for
 the current copy; verification follows separately. The watermark model, strength,

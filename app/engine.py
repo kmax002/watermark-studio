@@ -50,7 +50,7 @@ class Engine:
     def detect(self, path, state, start=0, seconds=30):
         values = []
         s = state['settings']
-        for arr in media.frames(path, s['width'], s['height'], 6, start, seconds, self.batch):
+        for arr in media.frames(path, s['width'], s['height'], None, start, seconds, self.batch):
             media.check_stop()
             x = self.tensor(arr)
             with torch.inference_mode():
@@ -61,6 +61,7 @@ class Engine:
         if not values:
             raise ValueError('No frames were available at that starting time.')
         result = assess_frames(np.concatenate(values), bytes.fromhex(state['key_hex']), state['source_sha256'], set(state['copy_tokens'].values()))
+        result['frame_sampling'] = 'all_native_frames'
         reverse = {v: k for k, v in state['copy_tokens'].items()}
         for item in [result.get('aggregate', {}), *result.get('disjoint_halves', [])]:
             if 'copy_token' in item:

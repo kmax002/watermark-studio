@@ -147,6 +147,27 @@ unchanged. This tests watermark recovery, not perceptual quality on arbitrary fi
 The updated detector also strictly recovered the old-version synthetic output
 using its original recovery JSON, without reissuing its IDs.
 
+## Native-frame recovery update (v0.1.6, 10 November)
+
+An authorized diagnosis reproduced a real-video opening-window failure: fixed
+6 fps sampling gave 23 wrong bits in the first temporal half, while reading all
+24 native frames per second reduced that to seven. The aggregate and both halves
+then authenticated the original issued ID. No watermark strength, payload,
+correction budget, authentication or two-half requirement was changed.
+
+Verification and leak checks now read every native frame within each window,
+with FFmpeg timestamp passthrough. Low-frame-rate inputs are not duplicated to
+meet the minimum evidence count. Thirty tests pass on Windows and the RunPod's
+Ubuntu environment. Added regressions cover loss from fixed-phase sampling and
+native frame counts, including a four-frame clip remaining four frames.
+
+The final GPU detector recovered the previously failing opening diagnostic and
+the old-version synthetic copy with their original recovery files. A recompressed
+synthetic copy also passed; the unmarked opening control remained inconclusive.
+Each 12-second, 24 fps check used 288 real frames. These checks do not establish
+successful completion of a full movie batch or universal watermark robustness.
+Private movie content and registers were kept outside the public source/package.
+
 ## Not established
 
 - Docker Desktop's Linux engine was unavailable. The Dockerfile has not been
@@ -155,8 +176,9 @@ using its original recovery JSON, without reissuing its IDs.
   checked. The successful browser test used small neutral files.
 - No claim of universal watermark robustness, guaranteed invisibility,
   arbitrary-film perceptual quality or statistically calibrated false attribution.
-- No user movie, pre-existing private recovery register or recipient record was
-  used in these tests, copied into the source package, or sent to a remote service.
+- Synthetic test media are separate from the explicitly authorized real-video
+  diagnosis above. No private movie, register or recipient record is included in
+  the public source package.
 
 ## Deployment limits
 

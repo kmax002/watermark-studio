@@ -18,6 +18,9 @@ benchmark. Do not stop a container with unbacked temporary storage to update it;
 an idle worker can load an updated checkout while the server stays alive.
 Never release an output before full decode, file-size and strict watermark checks.
 Aggregate and both temporal halves must agree; inconclusive is not no watermark.
+Detection reads every native video frame. Do not restore fixed 6 fps sampling:
+it can miss stronger phases of the temporal watermark. Do not duplicate frames
+to satisfy the minimum evidence count. Preserve strict authentication/halves.
 Identify copy IDs, never claim a person is identified or leaks are prevented.
 
 One authenticated owner per Pod. At the user's request, missing or empty
